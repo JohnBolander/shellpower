@@ -3,14 +3,18 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Drawing;
+using System.Diagnostics;
+using System.Windows.Forms;
 
 namespace SSCP.ShellPower
 {
     public class CreateArrayImage
     {
-        private static float SCALE = 1;
-        private static float RADIUS = 160*SCALE;
-        private static float CUT = 125 * SCALE;
+        private static double radius = 80;
+        private static double squareDim = 125;
+        private static float SCALE = 2;
+        private static float DIAMETER = (float)radius*2*SCALE;
+        private static float CUT = (float)squareDim * SCALE;
         private static float spaceing = 4 * SCALE;
         private static float xEdge = 70 * SCALE;
         private static float yEdge = 100 * SCALE;
@@ -18,6 +22,19 @@ namespace SSCP.ShellPower
         private static int n = 31; //cannot exceed 255
         private static int sizex = (int) Math.Round(xEdge * 2 + CUT * m + spaceing * (m - 1));
         private static int sizey = (int) Math.Round(yEdge * 2 + CUT * n + spaceing * (n - 1));
+
+        private static double heightTri = squareDim/2;
+        private static double circleArc = 2*Math.PI;
+        private static double percentCirc = 2*Math.Acos(heightTri/radius)/circleArc;
+        private static double baseTri = 2 * Math.Sqrt(radius * radius - heightTri * heightTri);
+        private static double areaTri = .5*heightTri*baseTri;
+        private static double croppedArea = Math.PI * radius * radius * percentCirc - areaTri;
+        private static double areaCell = Math.PI * radius * radius - 4 * croppedArea;
+        private static double maxArraySize = 6;
+        private static double maxAllowedCells = maxArraySize / (areaCell * .000001);
+        private string message = String.Format("Cell Area is {0}, allowing {1} cells", areaCell, maxAllowedCells);
+        //Debug.WriteLine("Cell Area is {0}, allowing {1} cells", areaCell, maxAllowedCells);
+        //DialogResult result = MessageBox.Show(message, "Possible Noncergence", MessageBoxButtons.YesNo);
 
 
         public static void CreateImage(){
@@ -29,11 +46,13 @@ namespace SSCP.ShellPower
                 }
                 b.Save(@"../../../../arrays/generic/newfile.png");
             }
+            Debug.WriteLine("percentArc: {0} Cropped Area: {1}, base triange: {2}", percentCirc, croppedArea, baseTri);
+            Debug.WriteLine("Cell Area is {0}, allowing {1} cells", areaCell, maxAllowedCells);
         }
         private static void DrawCell(Graphics g, float x, float y, Color color)
         {
-            float circX = x - (RADIUS - CUT) / 2;
-            float circY = y - (RADIUS - CUT) / 2; 
+            float circX = x - (DIAMETER - CUT) / 2;
+            float circY = y - (DIAMETER - CUT) / 2; 
             SolidBrush sb = new SolidBrush(color);
             RectangleF rectClip = new RectangleF();
             rectClip.Height = CUT;
@@ -41,7 +60,7 @@ namespace SSCP.ShellPower
             rectClip.X = x;
             rectClip.Y = y;
             g.Clip = new Region(rectClip);
-            g.FillEllipse(sb, circX, circY, RADIUS, RADIUS);
+            g.FillEllipse(sb, circX, circY, DIAMETER, DIAMETER);
         }
         private static void DrawArray(Graphics g)
         {
