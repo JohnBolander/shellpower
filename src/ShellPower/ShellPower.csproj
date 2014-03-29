@@ -156,6 +156,7 @@
     <Compile Include="Geom\IArea.cs" />
     <Compile Include="Geom\Shadow.cs" />
     <Compile Include="Geom\ShadowVolume.cs" />
+    <Compile Include="ImageCreation\CreateArrayImage.cs" />
     <Compile Include="Optimizer\ArrayBuilder.cs" />
     <Compile Include="Simulation\ArraySimDefaults.cs" />
     <Compile Include="Simulation\ArraySimulator.cs" />

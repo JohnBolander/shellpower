@@ -218,7 +218,7 @@ namespace SSCP.ShellPower
         {
             List<CellCluster> clusters = IntializeKMeans(k, cells);
 
-            DisplayCenters(clusters);
+            //DisplayCenters(clusters);
 
             Debug.WriteLine("K-intialized with {0} clusters", clusters.Count());
             bool centersChange = true;
@@ -255,7 +255,7 @@ namespace SSCP.ShellPower
                 Debug.WriteLine("{0} centers changed", numCellsSwitched);
                 timesLooped++;
             }
-            DisplayClusters(clusters);
+            //DisplayClusters(clusters);
             Debug.WriteLine("kmeans done!");
             return clusters;
         }

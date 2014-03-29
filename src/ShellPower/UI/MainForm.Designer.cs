@@ -608,7 +608,7 @@
             this.dateTimePicker2.Name = "dateTimePicker2";
             this.dateTimePicker2.Size = new System.Drawing.Size(194, 20);
             this.dateTimePicker2.TabIndex = 22;
-            this.dateTimePicker2.Value = new System.DateTime(2013, 10, 9, 8, 10, 0, 0);
+            this.dateTimePicker2.Value = new System.DateTime(2013, 10, 9, 17, 0, 0, 0);
             this.dateTimePicker2.ValueChanged += new System.EventHandler(this.dateTimePicker2_ValueChanged);
             // 
             // label18

@@ -40,6 +40,8 @@ namespace SSCP.ShellPower {
             LoadLayoutDefault("../../../../arrays/luminos/luminos-splines-6-string-no-bypass.png");
             CalculateSimStepGui();
 
+            CreateArrayImage.CreateImage();
+
             // init subviews
             arrayLayoutForm = new ArrayLayoutForm(simInput.Array);
             cellParamsForm = new CellParamsForm(simInput);
