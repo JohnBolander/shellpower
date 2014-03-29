@@ -57,7 +57,7 @@ namespace SSCP.ShellPower {
         /// <summary>
         /// Assigns cells to strings (a group of cells in series).
         /// </summary>
-        public List<CellString> Strings { get; private set; }
+        public List<CellString> Strings { get;  set; }//made set public
 
         public class CellString {
             public CellString() {
@@ -65,8 +65,8 @@ namespace SSCP.ShellPower {
                 BypassDiodes = new List<BypassDiode>();
                 Name = "NewString";
             }
-            public List<Cell> Cells { get; private set; }
-            public List<BypassDiode> BypassDiodes { get; private set; }
+            public List<Cell> Cells { get; set; } //made set public
+            public List<BypassDiode> BypassDiodes { get; set; } //made set public
             public String Name { get; set; }
             public override string ToString() {
                 string str = Name + " (" + Cells.Count + " cells";
@@ -96,9 +96,13 @@ namespace SSCP.ShellPower {
 
         public class Cell {
             public Color Color { get; set; }
+            public PointF Location { get; set; } //added
+            public List<double> Insolation { get; set; } //added
+            public bool isClusterCenter { get; set; } //added
             public List<Pair<int>> Pixels { get; private set; } //must be sorted, scanline order
             public Cell() {
                 Pixels = new List<Pair<int>>();
+                Insolation = new List<double>(); //added
             }
             public override int GetHashCode() {
                 if (Pixels.Count == 0) return 0;
@@ -186,6 +190,39 @@ namespace SSCP.ShellPower {
                 }
             }
             LayoutTexture.UnlockBits(data);
+        }
+        //coppied GetCellCenterpoints from ArrayLayoutControl
+        public void SetCellCenterpoints(int Width, int Height)
+        {
+            foreach(CellString cellString in this.Strings){
+                SizeF arraySize = this.GetScaledArraySize2(Width, Height);
+                float scale = arraySize.Width / this.LayoutTexture.Width;
+                //float scale = 10;
+
+                int n = cellString.Cells.Count;
+                for (int i = 0; i < n; i++)
+                {
+                    ArraySpec.Cell cell = cellString.Cells[i];
+                    int sx = 0, sy = 0;
+                    foreach (Pair<int> xy in cell.Pixels)
+                    {
+                        sx += xy.First;
+                        sy += xy.Second;
+                    }
+                    int m = cell.Pixels.Count;
+                    PointF point = new PointF(
+                        (float)sx / m * scale,
+                        (float)sy / m * scale);
+                    cellString.Cells[i].Location = point;
+                }
+            }
+        }
+        private SizeF GetScaledArraySize2(int Width, int Height)
+        {
+            double texW = this.LayoutTexture.Width;
+            double texH = this.LayoutTexture.Height;
+            double scale = Math.Min(Width / texW, Height / texH);
+            return new SizeF((float)(scale * texW), (float)(scale * texH));
         }
 
         public void ReadStringsFromColors() {
