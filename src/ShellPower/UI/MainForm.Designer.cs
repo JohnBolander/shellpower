@@ -66,6 +66,8 @@
             this.outputArrayLayoutControl = new SSCP.ShellPower.ArrayLayoutControl();
             this.tabPage1 = new System.Windows.Forms.TabPage();
             this.groupBoxSimulation = new System.Windows.Forms.GroupBox();
+            this.labelTimeStep = new System.Windows.Forms.Label();
+            this.timeStepBox = new System.Windows.Forms.TextBox();
             this.label19 = new System.Windows.Forms.Label();
             this.dateTimePicker2 = new System.Windows.Forms.DateTimePicker();
             this.label18 = new System.Windows.Forms.Label();
@@ -79,6 +81,7 @@
             this.labelSimAvgPower = new System.Windows.Forms.Label();
             this.label10 = new System.Windows.Forms.Label();
             this.glControl = new SSCP.ShellPower.ArrayModelControl();
+            this.mPPTParametersToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.statusStrip1.SuspendLayout();
             this.menuStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
@@ -146,7 +149,7 @@
             this.openLayoutToolStripMenuItem.Size = new System.Drawing.Size(178, 22);
             this.openLayoutToolStripMenuItem.Text = "Open layout texture";
             this.openLayoutToolStripMenuItem.ToolTipText = "Open a texture (image file, lossless compression like GIF or PNG, no antialiasing" +
-                ") that defines where each cell is on your array.";
+    ") that defines where each cell is on your array.";
             this.openLayoutToolStripMenuItem.Click += new System.EventHandler(this.openLayoutToolStripMenuItem_Click);
             // 
             // saveLayoutTextureToolStripMenuItem
@@ -162,7 +165,8 @@
             this.layoutToolStripMenuItem,
             this.layoutTextureDimensionsToolStripMenuItem,
             this.cellParametersToolStripMenuItem,
-            this.bypassDiodeParametersToolStripMenuItem});
+            this.bypassDiodeParametersToolStripMenuItem,
+            this.mPPTParametersToolStripMenuItem});
             this.editToolStripMenuItem.Name = "editToolStripMenuItem";
             this.editToolStripMenuItem.Size = new System.Drawing.Size(39, 20);
             this.editToolStripMenuItem.Text = "Edit";
@@ -181,7 +185,7 @@
             this.layoutTextureDimensionsToolStripMenuItem.Size = new System.Drawing.Size(213, 22);
             this.layoutTextureDimensionsToolStripMenuItem.Text = "Layout texture dimensions";
             this.layoutTextureDimensionsToolStripMenuItem.ToolTipText = "Define which part of the model is covered by the layout texture image--in other w" +
-                "ords, where the cells are.";
+    "ords, where the cells are.";
             this.layoutTextureDimensionsToolStripMenuItem.Click += new System.EventHandler(this.layoutTextureDimensionsToolStripMenuItem_Click);
             // 
             // cellParametersToolStripMenuItem
@@ -190,7 +194,7 @@
             this.cellParametersToolStripMenuItem.Size = new System.Drawing.Size(213, 22);
             this.cellParametersToolStripMenuItem.Text = "Cell parameters";
             this.cellParametersToolStripMenuItem.ToolTipText = "Define the characteristics of the indiviudual cell. Efficiency, fill factor, etc." +
-                "";
+    "";
             this.cellParametersToolStripMenuItem.Click += new System.EventHandler(this.cellParametersToolStripMenuItem_Click);
             // 
             // bypassDiodeParametersToolStripMenuItem
@@ -257,9 +261,9 @@
             // 
             // simInputControls
             // 
-            this.simInputControls.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-                        | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.simInputControls.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.simInputControls.Location = new System.Drawing.Point(0, 0);
             this.simInputControls.Name = "simInputControls";
             this.simInputControls.SimInput = null;
@@ -280,8 +284,8 @@
             // 
             // labelArrPower
             // 
-            this.labelArrPower.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.labelArrPower.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.labelArrPower.AutoSize = true;
             this.labelArrPower.BackColor = System.Drawing.SystemColors.Control;
             this.labelArrPower.BorderStyle = System.Windows.Forms.BorderStyle.None;
@@ -387,9 +391,9 @@
             // 
             // outputStringsListBox
             // 
-            this.outputStringsListBox.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-                        | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.outputStringsListBox.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.outputStringsListBox.FormattingEnabled = true;
             this.outputStringsListBox.Location = new System.Drawing.Point(5, 28);
             this.outputStringsListBox.Name = "outputStringsListBox";
@@ -545,9 +549,11 @@
             // 
             // groupBoxSimulation
             // 
-            this.groupBoxSimulation.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.groupBoxSimulation.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.groupBoxSimulation.BackColor = System.Drawing.Color.Transparent;
+            this.groupBoxSimulation.Controls.Add(this.labelTimeStep);
+            this.groupBoxSimulation.Controls.Add(this.timeStepBox);
             this.groupBoxSimulation.Controls.Add(this.label19);
             this.groupBoxSimulation.Controls.Add(this.dateTimePicker2);
             this.groupBoxSimulation.Controls.Add(this.label18);
@@ -567,6 +573,24 @@
             this.groupBoxSimulation.TabStop = false;
             this.groupBoxSimulation.Text = "Simulation";
             // 
+            // labelTimeStep
+            // 
+            this.labelTimeStep.AutoSize = true;
+            this.labelTimeStep.Location = new System.Drawing.Point(10, 93);
+            this.labelTimeStep.Name = "labelTimeStep";
+            this.labelTimeStep.Size = new System.Drawing.Size(83, 13);
+            this.labelTimeStep.TabIndex = 25;
+            this.labelTimeStep.Text = "Time Step (min):";
+            // 
+            // timeStepBox
+            // 
+            this.timeStepBox.Location = new System.Drawing.Point(102, 90);
+            this.timeStepBox.Name = "timeStepBox";
+            this.timeStepBox.Size = new System.Drawing.Size(194, 20);
+            this.timeStepBox.TabIndex = 24;
+            this.timeStepBox.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.timeStepBox_KeyPress);
+            this.timeStepBox.Validated += new System.EventHandler(this.timeStepBox_Validated);
+            // 
             // label19
             // 
             this.label19.AutoSize = true;
@@ -584,7 +608,7 @@
             this.dateTimePicker2.Name = "dateTimePicker2";
             this.dateTimePicker2.Size = new System.Drawing.Size(194, 20);
             this.dateTimePicker2.TabIndex = 22;
-            this.dateTimePicker2.Value = new System.DateTime(2013, 10, 9, 17, 0, 0, 0);
+            this.dateTimePicker2.Value = new System.DateTime(2013, 10, 9, 8, 10, 0, 0);
             this.dateTimePicker2.ValueChanged += new System.EventHandler(this.dateTimePicker2_ValueChanged);
             // 
             // label18
@@ -654,7 +678,7 @@
             // 
             // buttonRun
             // 
-            this.buttonRun.Location = new System.Drawing.Point(9, 103);
+            this.buttonRun.Location = new System.Drawing.Point(9, 120);
             this.buttonRun.Name = "buttonRun";
             this.buttonRun.Size = new System.Drawing.Size(75, 23);
             this.buttonRun.TabIndex = 9;
@@ -691,6 +715,13 @@
             this.glControl.Sprite = null;
             this.glControl.TabIndex = 0;
             this.glControl.VSync = true;
+            // 
+            // mPPTParametersToolStripMenuItem
+            // 
+            this.mPPTParametersToolStripMenuItem.Name = "mPPTParametersToolStripMenuItem";
+            this.mPPTParametersToolStripMenuItem.Size = new System.Drawing.Size(213, 22);
+            this.mPPTParametersToolStripMenuItem.Text = "MPPT parameters";
+            this.mPPTParametersToolStripMenuItem.Click += new System.EventHandler(this.mPPTParametersToolStripMenuItem_Click);
             // 
             // MainForm
             // 
@@ -785,5 +816,8 @@
         private System.Windows.Forms.Button btnRecalc;
         private SSCP.ShellPower.ArraySimInputControl simInputControls;
         private System.Windows.Forms.SplitContainer splitContainer2;
+        private System.Windows.Forms.TextBox timeStepBox;
+        private System.Windows.Forms.Label labelTimeStep;
+        private System.Windows.Forms.ToolStripMenuItem mPPTParametersToolStripMenuItem;
     }
 }

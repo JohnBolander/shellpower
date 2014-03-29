@@ -39,8 +39,8 @@ namespace SSCP.ShellPower {
 
         private bool ValidateEntries() {
             bool valid = true;
-            valid &= ViewUtil.ValidateEntry(textBoxVoc, out voc, double.Epsilon, 100);
-            valid &= ViewUtil.ValidateEntry(textBoxIsc, out isc, double.Epsilon, 100);
+            valid &= ViewUtil.ValidateEntry(textBoxVoc, out voc, double.Epsilon, 50);
+            valid &= ViewUtil.ValidateEntry(textBoxIsc, out isc, double.Epsilon, 50);
             valid &= ViewUtil.ValidateEntry(textBoxVocTemp, out dvocdt, -10, 10);
             valid &= ViewUtil.ValidateEntry(textBoxIscTemp, out discdt, -10, 10);
             valid &= ViewUtil.ValidateEntry(textBoxArea, out area, 0.0, 1.0);

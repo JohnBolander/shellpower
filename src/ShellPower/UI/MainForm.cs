@@ -12,7 +12,7 @@ using System.IO;
 namespace SSCP.ShellPower {
     public partial class MainForm : Form {
         /* model */
-        ArraySimulationStepInput simInput = new ArraySimulationStepInput();
+        ArraySimulationStepInput simInput;// = new ArraySimulationStepInput();
         Shadow shadow;
 
         /* sub views */
@@ -23,17 +23,21 @@ namespace SSCP.ShellPower {
         /* simulator */
         ArraySimulator simulator;
 
+        /* optimizer */
+        ArrayBuilder builder;
+
         public MainForm() {
             // init view
             InitializeComponent();
             tabControl1.SelectedIndex = 0;
+            timeStepBox.Text = "10";
             labelArrPower.Rtf = @"{\rtf1\ansi\deff0 Load model, load texture, then click simulate. }";
 
             // init model
-            simInput.Array = new ArraySpec();
-            InitTimeAndPlace();
-            InitializeArraySpec();
-            InitializeConditions();
+            simInput = ArraySimDefaults.CreateDefaultInput();
+            simInput.Array.Mesh = MeshIO.LoadMesh("../../../../arrays/luminos/luminos.stl");
+            LoadModel(simInput.Array.Mesh, "luminos.stl");
+            LoadLayoutDefault("../../../../arrays/luminos/luminos-splines-6-string-no-bypass.png");
             CalculateSimStepGui();
 
             // init subviews
@@ -49,49 +53,6 @@ namespace SSCP.ShellPower {
             outputArrayLayoutControl.Array = simInput.Array;
         }
 
-        private void InitTimeAndPlace() {
-            // Coober Pedy, SA, heading due south
-            simInput.Longitude = 134.75555;
-            simInput.Latitude = -29.01111;
-            simInput.Heading = Math.PI;
-
-            // Start of WSC 2013
-            simInput.Utc = new DateTime(2013, 10, 6, 8, 0, 0).AddHours(-9.5);
-            simInput.Timezone = TimeZoneInfo.FindSystemTimeZoneById("AUS Central Standard Time");
-        }
-
-        /// <summary>
-        /// Hack to make debugging faster.
-        /// </summary>
-        private void InitializeArraySpec() {
-            ArraySpec array = simInput.Array;
-            array.LayoutBoundsXZ = new RectangleF(-0.115f, -0.23f, 2.15f, 4.820f);
-            array.LayoutTexture = ArrayModelControl.DEFAULT_TEX;
-            LoadModel("../../../../arrays/luminos/luminos.stl");
-
-            // Sunpower C60 Bin I
-            // http://www.kyletsai.com/uploads/9/7/5/3/9753015/sunpower_c60_bin_ghi.pdf
-            CellSpec cellSpec = simInput.Array.CellSpec;
-            cellSpec.IscStc = 6.27;
-            cellSpec.VocStc = 0.686;
-            cellSpec.DIscDT = -0.0020; // approx, computed
-            cellSpec.DVocDT = -0.0018;
-            cellSpec.Area = 0.015555; // m^2
-            cellSpec.NIdeal = 1.26; // fudge
-            cellSpec.SeriesR = 0.003; // ohms
-
-            // Average bypass diode
-            DiodeSpec diodeSpec = simInput.Array.BypassDiodeSpec;
-            diodeSpec.VoltageDrop = 0.35;
-        }
-
-        private void InitializeConditions() {
-            simInput.Temperature = 25; // STC, 25 Celcius
-            simInput.Irradiance = 1050; // not STC
-            simInput.IndirectIrradiance = 70; // not STC
-            simInput.EncapuslationLoss = 0.025; // 2.5 %
-        }
-
         private void InitSimulator()
         {
             if (simulator == null)
@@ -100,35 +61,76 @@ namespace SSCP.ShellPower {
             }
         }
 
-        private void LoadModel(string filename) {
-            Mesh mesh = LoadMesh(filename);
-            Vector3 size = mesh.BoundingBox.Max - mesh.BoundingBox.Min;
-            if (size.Length > 1000)
+        private void InitBuilder(ArraySpec array, double cTemp)
+        {
+            if (builder == null)
             {
-                mesh = MeshUtils.Scale(mesh, 0.001f);
-                size *= 0.001f;
+                builder = new ArrayBuilder(array, cTemp);
             }
+        }
+        private void LoadLayoutDefault(string filename){
+            //var filname  = openFileDialogArray.FileName;
+            Bitmap bitmap = new Bitmap(filename);
+            if (bitmap == null)
+            {
+                return;
+            }
+
+            // apply the new texture, rollback if it fails
+            Bitmap origTexture = simInput.Array.LayoutTexture;
+            try
+            {
+                simInput.Array.LayoutTexture = bitmap;
+                simInput.Array.ReadStringsFromColors();
+                simInput.Array.SetCellCenterpoints(Width, Height); //added code here
+            }
+            catch (Exception e)
+            {
+                MessageBox.Show(e.Message, "Error loading layout texture", MessageBoxButtons.OK);
+                simInput.Array.LayoutTexture = origTexture;
+            }
+            CalculateSimStepGui();
+        }
+
+        private void LoadModel(Mesh mesh, String name)
+        {
+            Vector3 size = mesh.BoundingBox.Max - mesh.BoundingBox.Min;
             toolStripStatusLabel.Text = string.Format("Loaded model {0}, {1} triangles, {2:0.00}x{3:0.00}x{4:0.00}m",
-                System.IO.Path.GetFileName(filename),
+                name,
                 mesh.triangles.Length,
                 size.X, size.Y, size.Z);
-            
             SetModel(mesh);
         }
 
-        private Mesh LoadMesh(String filename) {
-            String extension = filename.Split('.').Last().ToLower();
-            IMeshParser parser;
-            if (extension.Equals("3dxml")) {
-                parser = new MeshParser3DXml();
-            } else if (extension.Equals("stl")) {
-                parser = new MeshParserStl();
-            } else {
-                throw new ArgumentException("Unsupported file type: " + extension);
-            }
-            parser.Parse(filename);
-            return parser.GetMesh();
-        }
+        //private void LoadModel(string filename) {
+        //    Mesh mesh = LoadMesh(filename);
+        //    Vector3 size = mesh.BoundingBox.Max - mesh.BoundingBox.Min;
+        //    if (size.Length > 1000)
+        //    {
+        //        mesh = MeshUtils.Scale(mesh, 0.001f);
+        //        size *= 0.001f;
+        //    }
+        //    toolStripStatusLabel.Text = string.Format("Loaded model {0}, {1} triangles, {2:0.00}x{3:0.00}x{4:0.00}m",
+        //        System.IO.Path.GetFileName(filename),
+        //        mesh.triangles.Length,
+        //        size.X, size.Y, size.Z);
+            
+        //    SetModel(mesh);
+        //}
+
+        //private Mesh LoadMesh(String filename) {
+        //    String extension = filename.Split('.').Last().ToLower();
+        //    IMeshParser parser;
+        //    if (extension.Equals("3dxml")) {
+        //        parser = new MeshParser3DXml();
+        //    } else if (extension.Equals("stl")) {
+        //        parser = new MeshParserStl();
+        //    } else {
+        //        throw new ArgumentException("Unsupported file type: " + extension);
+        //    }
+        //    parser.Parse(filename);
+        //    return parser.GetMesh();
+        //}
         
         /// <summary>
         /// Uses the given mesh for rendering and calculation.
@@ -191,7 +193,9 @@ namespace SSCP.ShellPower {
                 return;
             }
             try {
-                LoadModel(openFileDialogModel.FileName);
+                var fname = openFileDialogModel.FileName;
+                var mesh = MeshIO.LoadMesh(fname);
+                LoadModel(mesh, Path.GetFileName(fname));
             } catch (Exception e) {
                 MessageBox.Show(e.Message, "Error loading model", MessageBoxButtons.OK);
             }
@@ -211,6 +215,7 @@ namespace SSCP.ShellPower {
             try {
                 simInput.Array.LayoutTexture = bitmap;
                 simInput.Array.ReadStringsFromColors();
+                simInput.Array.SetCellCenterpoints(Width, Height); //added code here
             } catch (Exception e) {
                 MessageBox.Show(e.Message, "Error loading layout texture", MessageBoxButtons.OK);
                 simInput.Array.LayoutTexture = origTexture;
@@ -227,17 +232,28 @@ namespace SSCP.ShellPower {
 
         private void btnRecalc_Click(object sender, EventArgs e) {
             try {
+                InitBuilder(simInput.Array, simInput.Temperature);
+                builder.ClearInsolationData(simInput.Array.Strings);
+
                 InitSimulator();
                 ArraySimulationStepOutput simOutputNoon = simulator.Simulate(
                     simInput.Array, new Vector3(0.1f, 0.995f, 0.0f), 
                     simInput.Irradiance, simInput.IndirectIrradiance, 
                     simInput.EncapuslationLoss, simInput.Temperature);
                 ArraySimulationStepOutput simOutput = simulator.Simulate(simInput);
+                Debug.WriteLine("Finished Sim");
+
+                //StringSimulator stringSim = new StringSimulator(); //hack
+                double beforePower = StringSimulator.CalcArrayPower(simInput.Array, 1, simInput.Temperature);
+                builder.ClusterIntoStrings(simInput.Array.Strings);
+                double afterPower = StringSimulator.CalcArrayPower(simInput.Array, 1, simInput.Temperature);
+                Debug.WriteLine("Before: {0}W, After: {1}W", beforePower, afterPower);
+
                 double arrayAreaDistortion = Math.Abs(simOutputNoon.ArrayLitArea-simOutput.ArrayArea)/simOutput.ArrayArea;
                 
                 Debug.WriteLine("Array simulation output");
                 Debug.WriteLine("   ... " + simOutput.ArrayArea + " m^2 nominal area, "
-                    + simOutputNoon.ArrayLitArea + " m^2 simulated area" + (arrayAreaDistortion > 0.01 ? " MISMATCH" : ""));
+                     + simOutputNoon.ArrayLitArea + " m^2 lit area" + (arrayAreaDistortion > 0.01 ? " MISMATCH" : ""));
                 Debug.WriteLine("   ... " + simOutput.ArrayLitArea + " m^2 exposed to sunlight");
                 Debug.WriteLine("   ... " + simOutput.WattsInsolation + " W insolation");
                 Debug.WriteLine("   ... " + simOutput.WattsOutputByCell + " W output (assuming mppt per cell)");
@@ -331,6 +347,12 @@ namespace SSCP.ShellPower {
             form.Spec = simInput.Array.BypassDiodeSpec;
             form.ShowDialog();
         }
+        private void mPPTParametersToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var form = new MPPT_ParamForm(simInput.MPPT);
+            form.ShowDialog();
+        }
+
 
         private void dateTimePicker1_ValueChanged(object sender, EventArgs e) {
             if (dateTimePicker2.Value <= dateTimePicker1.Value) {
@@ -348,6 +370,11 @@ namespace SSCP.ShellPower {
             TimeAveragedSim();
         }
 
+        private void timeStepBox_KeyPress(object sender, System.Windows.Forms.KeyPressEventArgs e)
+        {
+            char ch = e.KeyChar;
+            if (!Char.IsDigit(ch) && ch != 8 && ch != 46) e.Handled = true; //8 handles backspace key
+        }
         private void TimeAveragedSim() {
             // input time range; all other inputs come from simInput
             DateTime utcStart = dateTimePicker1.Value.Subtract(simInput.Timezone.GetUtcOffset(dateTimePicker1.Value));
@@ -363,7 +390,9 @@ namespace SSCP.ShellPower {
             // simulate in 10-minute intervals
             InitSimulator();
             int nsim = 0;
-            for (DateTime time = utcStart; time <= utcEnd; time = time.AddMinutes(10), nsim++) {
+            int stepSize = Convert.ToInt32(timeStepBox.Text);
+            for (DateTime time = utcStart; time <= utcEnd; time = time.AddMinutes(stepSize), nsim++)
+            {
                 simInput.Utc = time;
                 simInputControls.UpdateView();
                 ArraySimulationStepOutput simOutput = simulator.Simulate(simInput);
@@ -381,7 +410,40 @@ namespace SSCP.ShellPower {
                 // debug output
                 csv.WriteLine(time + "," + simOutput.WattsInsolation + "," + simOutput.WattsOutput);
             }
+            InitBuilder(simInput.Array, simInput.Temperature);
+            builder.ClusterIntoStrings(simInput.Array.Strings);
             csv.Close();
+
+            nsim = 0;
+            //StringSimulator stringSim = new StringSimulator();
+            double totalPowerAfter = 0;
+            for (DateTime time = utcStart; time <= utcEnd; time = time.AddMinutes(stepSize), nsim++)
+            {
+                totalPowerAfter += StringSimulator.CalcArrayPower(simInput.Array, nsim, simInput.Temperature);
+            }
+
+            //using (System.IO.StreamWriter file = new System.IO.StreamWriter(@"C:\Users\John\Dropbox\SolarCar\WriteLines3.txt", true))
+            //{
+            //    int nstrings = simInput.Array.Strings.Count;
+            //    string printToLine = "";
+            //    for (int i = 0; i < nstrings; i++)
+            //    {
+            //        var cellStr = simInput.Array.Strings[i];
+            //        printToLine = "New String";
+            //        file.WriteLine(printToLine);
+            //        for (int j = 0; j < cellStr.Cells.Count; j++)
+            //        {
+            //            printToLine = cellStr.Cells[j].Location.ToString() + ": ";
+            //            if (cellStr.Cells[j].isClusterCenter) printToLine = "Cluster Center ->" + printToLine;
+            //            int insolCount = cellStr.Cells[j].Insolation.Count();
+            //            for (int k = 0; k < insolCount; k++) printToLine += Math.Round(cellStr.Cells[j].Insolation[k], 3) + ", ";
+            //            file.WriteLine(printToLine);
+            //        }
+            //    }
+            //}
+
+
+            Debug.WriteLine("Before: {0}, After: {1}", simAvg.WattsOutput, totalPowerAfter);
 
             // show the average output
             simAvg.ArrayLitArea /= nsim;
@@ -395,6 +457,12 @@ namespace SSCP.ShellPower {
             Debug.WriteLine("   ... " + simAvg.WattsOutputByCell + " W output (assuming mppt per cell)");
             Debug.WriteLine("   ... " + simAvg.WattsOutput + " W output");
 
+        }
+
+        //what happens if you leave it blank
+        private void timeStepBox_Validated(object sender, EventArgs e)
+        {
+            if (((TextBox)sender).Text == "") ((TextBox)sender).Text = "10";
         }
     }
 }

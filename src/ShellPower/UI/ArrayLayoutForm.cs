@@ -113,6 +113,7 @@ namespace SSCP.ShellPower {
             if (bmp != null) {
                 array.LayoutTexture = bmp;
                 array.ReadStringsFromColors();
+                array.SetCellCenterpoints(Width, Height);//added this line to set the location of each point
                 UpdateView();
             }
         }
@@ -167,6 +168,7 @@ namespace SSCP.ShellPower {
 
         private void buttonCancel_Click(object sender, EventArgs e) {
             //TODO: support cancel
+            this.Close();
         }
 
         private void ArrayLayoutForm_Load(object sender, EventArgs e) {

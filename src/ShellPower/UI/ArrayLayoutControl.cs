@@ -258,9 +258,40 @@ namespace SSCP.ShellPower {
                 g.DrawBezier(new Pen(Color.Red, 3f), pA, pMidA, pMidB, pB);
             }
 
+            DrawClusterCenters(g);
+
             // draw the bypass diode endpoints
             foreach(int i in bypassJunctions){
                 DrawJunction(g, junctionPoints[i], Brushes.Red);
+            }
+        }
+
+        private void DrawClusterCenters(Graphics g)
+        {
+            SizeF arraySize = GetScaledArraySize();
+            float scale = arraySize.Width / Array.LayoutTexture.Width;
+            foreach (ArraySpec.Cell cell in CellString.Cells)
+            {
+                if (cell.isClusterCenter)
+                {
+                    int sx = 0, sy = 0;
+                    foreach (Pair<int> xy in cell.Pixels)
+                    {
+                        sx += xy.First;
+                        sy += xy.Second;
+                    }
+                    int m = cell.Pixels.Count;
+                    PointF point = new PointF(
+                        (float)sx / m * scale,
+                        (float)sy / m * scale);
+                    double newScale = System.Convert.ToDouble(scale);
+                    newScale = newScale / .058;
+                    int circleScale = 4 * (int)newScale;
+                    //DrawJunction(g, point, Brushes.OrangeRed);
+                    g.FillEllipse(Brushes.OrangeRed,
+                point.X - circleScale, point.Y - circleScale,
+                circleScale * 2, circleScale * 2);
+                }
             }
         }
 
@@ -318,7 +349,8 @@ namespace SSCP.ShellPower {
             for (int i = 0; i < n; i++) {
                 ArraySpec.Cell cell = cellString.Cells[i];
                 int sx = 0, sy = 0;
-                foreach (Pair<int> xy in cell.Pixels) {
+                foreach (Pair<int> xy in cell.Pixels)
+                {
                     sx += xy.First;
                     sy += xy.Second;
                 }
