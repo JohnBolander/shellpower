@@ -57,7 +57,7 @@ namespace SSCP.ShellPower {
         public static IVTrace CalcSweep(CellSpec cell, double insolationW, double tempC) {
             double voc = cell.CalcVoc(insolationW, tempC);
             double isc = cell.CalcIsc(insolationW, tempC);
-            int n = 100;
+            int n = 100; //how many steps do the actual MPPTs take?
             double[] vecv = new double[n + 1];
             for (int i = 0; i <= n; i++) {
                 vecv[i] = voc * (double)i / n;

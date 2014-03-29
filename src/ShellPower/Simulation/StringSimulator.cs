@@ -118,5 +118,87 @@ namespace SSCP.ShellPower {
             trace.Vmp = vmp;
             return trace;
         }
+
+        public ArraySimStringOutput[] CalcArrayPower(ArraySpec array, int timeperiod, double wPerM2Insolation, double cTemp)
+        {
+             CellSpec cellSpec = array.CellSpec;
+            int nstrings = array.Strings.Count;
+            // Outputs:
+            double totalWattsOutByCell = 0;
+            double totalWattsOutByString = 0;
+            var strings = new ArraySimStringOutput[nstrings];
+            for (int i = 0; i < nstrings; i++)
+            {
+                var cellStr = array.Strings[i];
+                double stringWattsIn = 0, stringWattsOutByCell = 0, stringLitArea = 0;
+
+                // per-cell sweeps
+                var cellSweeps = new IVTrace[cellStr.Cells.Count];
+                for (int j = 0; j < cellStr.Cells.Count; j++)
+                {
+                    double cellWattsIn = cellStr.Cells[j].Insolation[timeperiod];
+                    double cellInsolation = cellWattsIn / cellSpec.Area;
+                    IVTrace cellSweep = CellSimulator.CalcSweep(cellSpec, cellInsolation, cTemp);
+                    cellSweeps[j] = cellSweep;
+
+                    stringWattsIn += cellWattsIn;
+                    stringWattsOutByCell += cellSweep.Pmp;
+                    totalWattsOutByCell += cellSweep.Pmp;
+                }
+
+                // string sweep
+                strings[i] = new ArraySimStringOutput();
+                strings[i].WattsIn = stringWattsIn;
+                strings[i].WattsOutputByCell = stringWattsOutByCell;
+                IVTrace stringSweep = StringSimulator.CalcStringIV(cellStr, cellSweeps, array.BypassDiodeSpec);
+                strings[i].WattsOutput = stringSweep.Pmp;
+                strings[i].IVTrace = stringSweep;
+
+                // higher-level string info
+                strings[i].String = cellStr;
+                strings[i].Area = cellStr.Cells.Count * cellSpec.Area;
+                strings[i].AreaShaded = strings[i].Area - stringLitArea;
+                IVTrace cellSweepIdeal = CellSimulator.CalcSweep(cellSpec, wPerM2Insolation, cTemp);
+                strings[i].WattsOutputIdeal = cellSweepIdeal.Pmp * cellStr.Cells.Count;
+
+                // total array power
+                totalWattsOutByString += stringSweep.Pmp;
+            }
+            return strings;
+        }
+
+        public static double CalcArrayPower(ArraySpec array, int timeperiod, double cTemp)
+        {
+            CellSpec cellSpec = array.CellSpec;
+            int nstrings = array.Strings.Count;
+            // Outputs:
+            double totalWattsOutByString = 0;
+            for (int i = 0; i < nstrings; i++)
+            {
+                var cellStr = array.Strings[i];
+                // string sweep
+                IVTrace stringSweep = GetStringIV(cellStr, timeperiod, cTemp, array.BypassDiodeSpec, cellSpec);
+   
+                // total array power
+                totalWattsOutByString += stringSweep.Pmp;
+            }
+            return totalWattsOutByString;
+        }
+
+        public static IVTrace GetStringIV(ArraySpec.CellString cellStr, int timeperiod, double cTemp, DiodeSpec bypassSpec, CellSpec cellSpec)
+        {
+            //percell sweeps
+            var cellSweeps = new IVTrace[cellStr.Cells.Count];
+            for (int j = 0; j < cellStr.Cells.Count; j++)
+            {
+                double cellWattsIn = cellStr.Cells[j].Insolation[timeperiod];
+                double cellInsolation = cellWattsIn / cellSpec.Area;
+                IVTrace cellSweep = CellSimulator.CalcSweep(cellSpec, cellInsolation, cTemp);
+                cellSweeps[j] = cellSweep;
+            }
+
+            // string sweep
+            return CalcStringIV(cellStr, cellSweeps, bypassSpec);
+        }
     }
 }

@@ -35,7 +35,7 @@ namespace SSCP.ShellPower {
         /// Shaders to compute array properties
         /// </summary>
         private void InitGLInputShaders() {
-            Debug.WriteLine("compiling shaders");
+            Debug.WriteLine("Compiling shaders");
             shaderFrag = GL.CreateShader(ShaderType.FragmentShader);
             shaderVert = GL.CreateShader(ShaderType.VertexShader);
             GL.ShaderSource(shaderVert, @"
@@ -188,7 +188,7 @@ void main()
                 DateTime dt1 = DateTime.Now;
                 SetUniforms(array, wPerM2Insolation);
                 ComputeRender(array, sunDir);
-                DebugSaveBuffers();
+                if(Debugger.IsAttached) DebugSaveBuffers();
                 output = AnalyzeComputeTex(array, wPerM2Insolation, wPerM2Indirect, encapLoss, cTemp);
                 DateTime dt2 = DateTime.Now;
 
@@ -383,7 +383,10 @@ void main()
         /// 
         /// Uses this to calculate IV curves, etc, and ultimately array power.
         /// </summary>
-        private ArraySimulationStepOutput AnalyzeComputeTex(ArraySpec array, double wPerM2Insolation, double wPerM2Iindirect, double encapLoss, double cTemp) {
+        /// 
+
+        private ArraySimulationStepOutput AnalyzeComputeTex(ArraySpec array, double wPerM2Insolation, double wPerM2Iindirect, double encapLoss, double cTemp)
+        {
             Color[] texColors = ReadColorTexture(FramebufferAttachment.ColorAttachment0);
             float[] texWattsIn = ReadFloatTexture(FramebufferAttachment.ColorAttachment1, 0.0001);
             double arrayDimM = ComputeArrayMaxDimension(array);
@@ -402,8 +405,10 @@ void main()
             int ncells = 0;
             var cells = new List<ArraySpec.Cell>();
             var colorToId = new Dictionary<Color, int>();
-            foreach (ArraySpec.CellString cellStr in array.Strings) {
-                foreach (ArraySpec.Cell cell in cellStr.Cells) {
+            foreach (ArraySpec.CellString cellStr in array.Strings)
+            {
+                foreach (ArraySpec.Cell cell in cellStr.Cells)
+                {
                     cells.Add(cell);
                     colorToId.Add(cell.Color, ncells);
                     ncells++;
@@ -414,38 +419,44 @@ void main()
             double[] wattsIn = new double[ncells];
             double[] areas = new double[ncells];
             double wattsInUnlinked = 0, areaUnlinked = 0;
-            for (int i = 0; i < computeWidth * computeHeight; i++) {
+            for (int i = 0; i < computeWidth * computeHeight; i++)
+            {
                 Color color = texColors[i];
                 if (ColorUtils.IsGrayscale(color)) continue;
-                if (colorToId.ContainsKey(color)) {
+                if (colorToId.ContainsKey(color))
+                {
                     int id = colorToId[color];
                     wattsIn[id] += texWattsIn[i];
                     areas[id] += texArea[i];
-                } else {
+                }
+                else
+                {
                     wattsInUnlinked += texWattsIn[i];
                     areaUnlinked += texArea[i];
                 }
             }
-            if (areaUnlinked > 0 || wattsInUnlinked > 0) {
+            if (areaUnlinked > 0 || wattsInUnlinked > 0)
+            {
                 Logger.warn("Found texels that are not grayscale, " +
                     "but also doesn't correspond to any cell. Have you finished your layout?" +
-                    "\n\tTotal of {0}m^2 cell area not in any string, with {1}W insolation.", 
-                    areaUnlinked,wattsInUnlinked);
+                    "\n\tTotal of {0}m^2 cell area not in any string, with {1}W insolation.",
+                    areaUnlinked, wattsInUnlinked);
             }
 
-            // add indirect insolation, encapsulation loss
-            for (int i = 0; i < ncells; i++) {
-                wattsIn[i] += array.CellSpec.Area * wPerM2Iindirect;
-                wattsIn[i] *= (1.0 - encapLoss);
-            }
-
-            // find totals
+            //compute by cell watts and find totals
             double totalArea = 0, totalWattsIn = 0;
-            for (int i = 0; i < ncells; i++) {
-                totalWattsIn += wattsIn[i];
-                totalArea += areas[i];
-                Debug.WriteLine("cell {0}: {1}W, {2}m^2", i, wattsIn[i], areas[i]);
+            foreach (ArraySpec.Cell cell in cells)
+            {
+                int id = colorToId[cell.Color];
+                wattsIn[id] += array.CellSpec.Area * wPerM2Iindirect;
+                wattsIn[id] *= (1.0 - encapLoss);
+                cell.Insolation.Add(wattsIn[id]); //populates the insolation vector of cells
+                totalWattsIn += wattsIn[id];
+                totalArea += areas[id];
+                Debug.WriteLine("cell {0}: {1}W, {2}m^2", id, wattsIn[id], areas[id]);
             }
+
+            //split here
             Debug.WriteLine("total: {0}W, {1}m^2", totalWattsIn, totalArea);
 
             // MPPT sweeps, for each cell and each string. 
@@ -457,13 +468,15 @@ void main()
             double totalWattsOutByString = 0;
             var strings = new ArraySimStringOutput[nstrings];
             int cellIx = 0;
-            for(int i = 0; i < nstrings; i++){
+            for (int i = 0; i < nstrings; i++)
+            {
                 var cellStr = array.Strings[i];
                 double stringWattsIn = 0, stringWattsOutByCell = 0, stringLitArea = 0;
 
                 // per-cell sweeps
                 var cellSweeps = new IVTrace[cellStr.Cells.Count];
-                for(int j = 0; j < cellStr.Cells.Count; j++){
+                for (int j = 0; j < cellStr.Cells.Count; j++)
+                {
                     double cellWattsIn = wattsIn[cellIx++];
                     double cellInsolation = cellWattsIn / cellSpec.Area;
                     IVTrace cellSweep = CellSimulator.CalcSweep(cellSpec, cellInsolation, cTemp);
@@ -487,9 +500,9 @@ void main()
 
                 // higher-level string info
                 strings[i].String = cellStr;
-                strings[i].Area = cellStr.Cells.Count*cellSpec.Area;
+                strings[i].Area = cellStr.Cells.Count * cellSpec.Area;
                 strings[i].AreaShaded = strings[i].Area - stringLitArea;
-                IVTrace cellSweepIdeal = CellSimulator.CalcSweep(cellSpec,wPerM2Insolation,cTemp);
+                IVTrace cellSweepIdeal = CellSimulator.CalcSweep(cellSpec, wPerM2Insolation, cTemp);
                 strings[i].WattsOutputIdeal = cellSweepIdeal.Pmp * cellStr.Cells.Count;
 
                 // total array power
@@ -505,6 +518,100 @@ void main()
             output.Strings = strings;
             return output;
         }
+
+        public ArraySimulationStepOutput SimulateArray(ArraySpec array, double[] wattsIn, double[] areas, double wPerM2Insolation, double cTemp)
+        {
+            // MPPT sweeps, for each cell and each string. 
+            // Inputs:
+            CellSpec cellSpec = array.CellSpec;
+            int nstrings = array.Strings.Count;
+            // Outputs:
+            double totalWattsOutByCell = 0;
+            double totalWattsOutByString = 0;
+            var strings = new ArraySimStringOutput[nstrings];
+            int cellIx = 0;
+            double totalWattsIn = 0, totalArea = 0;
+            for (int i = 0; i < nstrings; i++)
+            {
+                var cellStr = array.Strings[i];
+                double stringWattsIn = 0, stringWattsOutByCell = 0, stringLitArea = 0;
+
+                // per-cell sweeps
+                var cellSweeps = new IVTrace[cellStr.Cells.Count];
+                for (int j = 0; j < cellStr.Cells.Count; j++)
+                {
+                    double cellWattsIn = wattsIn[cellIx++]; //doesn't this add one first then computes the 
+                    totalWattsIn += cellWattsIn;
+                    double cellInsolation = cellWattsIn / cellSpec.Area;
+                    IVTrace cellSweep = CellSimulator.CalcSweep(cellSpec, cellInsolation, cTemp);
+                    cellSweeps[j] = cellSweep;
+
+                    stringWattsIn += cellWattsIn;
+                    stringWattsOutByCell += cellSweep.Pmp;
+                    totalWattsOutByCell += cellSweep.Pmp;
+
+                    // shading stats
+                    stringLitArea += areas[i];
+                }
+
+                // string sweep
+                strings[i] = new ArraySimStringOutput();
+                strings[i].WattsIn = stringWattsIn;
+                strings[i].WattsOutputByCell = stringWattsOutByCell;
+                IVTrace stringSweep = StringSimulator.CalcStringIV(cellStr, cellSweeps, array.BypassDiodeSpec);
+                strings[i].WattsOutput = stringSweep.Pmp;
+                strings[i].IVTrace = stringSweep;
+
+                // higher-level string info
+                strings[i].String = cellStr;
+                strings[i].Area = cellStr.Cells.Count * cellSpec.Area;
+                strings[i].AreaShaded = strings[i].Area - stringLitArea;
+                IVTrace cellSweepIdeal = CellSimulator.CalcSweep(cellSpec, wPerM2Insolation, cTemp);
+                strings[i].WattsOutputIdeal = cellSweepIdeal.Pmp * cellStr.Cells.Count;
+
+                // total array power
+                totalWattsOutByString += stringSweep.Pmp;
+            }
+
+            ArraySimulationStepOutput output = new ArraySimulationStepOutput();
+            output.ArrayArea = cellIx * cellSpec.Area; //replaced ncells with cellIx - should be te same...?
+            output.ArrayLitArea = totalArea;
+            output.WattsInsolation = totalWattsIn;
+            output.WattsOutputByCell = totalWattsOutByCell;
+            output.WattsOutput = totalWattsOutByString;
+            output.Strings = strings;
+            return output;
+        }
+
+        //private void ComputeCellInsolation(double[] wattsIn, double[] areas, List<ArraySpec.Cell> cells, CellSpec cellSpec)
+        //{
+        //    using (System.IO.StreamWriter file = new System.IO.StreamWriter(@"C:\Users\John\Dropbox\SolarCar\WriteLines2.txt", true))
+        //    {
+        //     add indirect insolation, encapsulation loss
+        //    for (int i = 0; i < ncells; i++)
+        //    {
+        //        wattsIn[i] += array.CellSpec.Area * wPerM2Iindirect;
+        //        wattsIn[i] *= (1.0 - encapLoss);
+        //    }
+
+        //    foreach (ArraySpec.Cell cell in cells)
+        //    {
+        //        int id = colorToId[cell.Color];
+        //        cell.Insolation.Add(wattsIn[id]); //populates the insolation vector of cells
+        //        string stringToPrint = cell.Location.ToString() + ": " + wattsIn[id].ToString();
+        //        file.WriteLine(stringToPrint);
+        //    }
+        //     find totals
+        //    double totalArea = 0, totalWattsIn = 0;
+        //    for (int i = 0; i < ncells; i++)
+        //    {
+        //        totalWattsIn += wattsIn[i];
+        //        totalArea += areas[i];
+        //        Debug.WriteLine("cell {0}: {1}W, {2}m^2", i, wattsIn[i], areas[i]);
+        //    }
+        //    file.WriteLine(totalWattsIn);
+        //    Debug.WriteLine("total: {0}W, {1}m^2", totalWattsIn, totalArea);
+        //}
 
         /// <summary>
         /// Reads an OpenGL buffer. Returns the contents as an image (specifically, 32-bpp ARGB bitmap).

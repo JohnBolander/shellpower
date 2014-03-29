@@ -54,6 +54,11 @@ namespace SSCP.ShellPower {
         /// Shape and layout of the solar array
         /// </summary>
         public ArraySpec Array { get; set; }
+
+        /// <summary>
+        /// Constraints and Efficiency parameters for the MPPTs
+        /// </summary>
+        public MPPTSpec MPPT { get; set; }
     }
 
     public class ArraySimulationStepOutput {
