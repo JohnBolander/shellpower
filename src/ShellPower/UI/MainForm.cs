@@ -245,6 +245,10 @@ namespace SSCP.ShellPower {
                 ArraySimulationStepOutput simOutput = simulator.Simulate(simInput);
                 Debug.WriteLine("Finished Sim");
 
+                builder.ReturnBestCells(simInput.Array.Strings);
+                arrayLayoutForm = new ArrayLayoutForm(simInput.Array);
+                arrayLayoutForm.ShowDialog();//to check to see what happened.
+
                 //StringSimulator stringSim = new StringSimulator(); //hack
                 double beforePower = StringSimulator.CalcArrayPower(simInput.Array, 1, simInput.Temperature);
                 builder.ClusterIntoStrings(simInput.Array.Strings);
@@ -281,6 +285,7 @@ namespace SSCP.ShellPower {
         }
 
         private void layoutToolStripMenuItem_Click(object sender, EventArgs e) {
+            arrayLayoutForm = new ArrayLayoutForm(simInput.Array);
             arrayLayoutForm.ShowDialog();
         }
 
@@ -413,6 +418,9 @@ namespace SSCP.ShellPower {
                 csv.WriteLine(time + "," + simOutput.WattsInsolation + "," + simOutput.WattsOutput);
             }
             InitBuilder(simInput.Array, simInput.Temperature);
+            builder.ReturnBestCells(simInput.Array.Strings);
+            arrayLayoutForm.ShowDialog();//to check to see what happened.
+
             builder.ClusterIntoStrings(simInput.Array.Strings);
             csv.Close();
 

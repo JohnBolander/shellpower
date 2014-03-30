@@ -286,7 +286,7 @@ namespace SSCP.ShellPower {
                         (float)sy / m * scale);
                     double newScale = System.Convert.ToDouble(scale);
                     newScale = newScale / .058;
-                    int circleScale = 4 * (int)newScale;
+                    int circleScale = 4 * (int)Math.Max(newScale,1);
                     //DrawJunction(g, point, Brushes.OrangeRed);
                     g.FillEllipse(Brushes.OrangeRed,
                 point.X - circleScale, point.Y - circleScale,

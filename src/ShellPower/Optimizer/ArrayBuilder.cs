@@ -13,11 +13,12 @@ namespace SSCP.ShellPower
         ArraySpec tempArray;
         ArrayLayoutForm arrayLayoutForm;
         private int MIN_NUM_CLUSTERS = 4;
-        private int MAX_NUM_CLUSTERS = 4;
+        private int MAX_NUM_CLUSTERS = 16;
         private static DiodeSpec byPassDiodeSpec;
         private static CellSpec cellSpec;
         private static double cTempLocal;
         private int MAX_LOOP_TIMES = 1000;
+        private int MaxNumCells = 391;//change this later
 
         public ArrayBuilder(ArraySpec originalArray, double cTemp)
         {
@@ -64,19 +65,19 @@ namespace SSCP.ShellPower
 
         public void ClusterIntoStrings(List<ArraySpec.CellString> strings)
         {
-            var cells = new List<ArraySpec.Cell>();
-            foreach (ArraySpec.CellString cellStr in strings)
-            {
-                foreach (ArraySpec.Cell cell in cellStr.Cells)
-                {
-                    cells.Add(cell);
-                }
-            }
+            var cells = StringsToCells(strings);
+
             int k = 6; //should be a for loop here
             double locScale = .015;//should get this from the UI
             Debug.WriteLine("about to enter kmeans");
             List<CellCluster> clusters = kMeansCluster(k, cells, locScale);
 
+            //assign the clusters back to the array
+            ClustersToStrings(clusters, strings);
+        }
+
+        private void ClustersToStrings(List<CellCluster> clusters, List<ArraySpec.CellString> strings)
+        {
             //assign the clusters back to the array
             strings.Clear();
             int i = 0;
@@ -88,6 +89,40 @@ namespace SSCP.ShellPower
                 strings.Add(newString);
                 i++;
             }
+        }
+
+        private List<ArraySpec.Cell> StringsToCells(List<ArraySpec.CellString> strings)
+        {
+            var cells = new List<ArraySpec.Cell>();
+            foreach (ArraySpec.CellString cellStr in strings)
+            {
+                foreach (ArraySpec.Cell cell in cellStr.Cells)
+                {
+                    cells.Add(cell);
+                }
+            }
+            return cells;
+        }
+
+        private List<ArraySpec.Cell> FindBestCells(List<ArraySpec.Cell> cells)
+        {
+            //faster to get rid cells with the least amount of sun
+            int numCells = cells.Count();
+            int numCellsToRemove = numCells - MaxNumCells;
+            Debug.WriteLine("Removing {0} cells", numCellsToRemove);
+            for (int i = 0; i < numCellsToRemove; i++)
+            {
+                cells.Remove(MinCell(cells, 0, 1));
+            }
+            Debug.WriteLine("Removed {0} cells", numCells - cells.Count());
+            return cells;
+        }
+
+        public void ReturnBestCells(List<ArraySpec.CellString> strings)
+        {
+            var cells = StringsToCells(strings);
+            cells = FindBestCells(cells);
+            ClustersToStrings(IntializeKMeans(6, cells), strings);
         }
 
         //public void FindNumMPPTs(List<ArraySpec.Cell> cells)
@@ -255,7 +290,7 @@ namespace SSCP.ShellPower
                 Debug.WriteLine("{0} centers changed", numCellsSwitched);
                 timesLooped++;
             }
-            //DisplayClusters(clusters);
+            DisplayClusters(clusters);
             Debug.WriteLine("kmeans done!");
             return clusters;
         }

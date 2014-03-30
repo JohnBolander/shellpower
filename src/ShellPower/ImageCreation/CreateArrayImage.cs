@@ -10,18 +10,23 @@ namespace SSCP.ShellPower
 {
     public class CreateArrayImage
     {
+        //padding correction to center on car
+        private static float yTopPad = 35;
+        private static float xEndPad = 125;
+
+
         private static double radius = 80;
         private static double squareDim = 125;
-        private static float SCALE = 2;
+        private static float SCALE = 1;
         private static float DIAMETER = (float)radius*2*SCALE;
         private static float CUT = (float)squareDim * SCALE;
-        private static float spaceing = 4 * SCALE;
-        private static float xEdge = 70 * SCALE;
-        private static float yEdge = 100 * SCALE;
+        private static float spaceing = 8 * SCALE;
+        private static float xEdge = 200 * SCALE;
+        private static float yEdge = 225 * SCALE;
         private static int m = 13; //cannot exceed 255
-        private static int n = 31; //cannot exceed 255
-        private static int sizex = (int) Math.Round(xEdge * 2 + CUT * m + spaceing * (m - 1));
-        private static int sizey = (int) Math.Round(yEdge * 2 + CUT * n + spaceing * (n - 1));
+        private static int n = 35; //cannot exceed 255
+        private static int sizex = (int)Math.Round(xEdge * 2 + CUT * m + spaceing * (m - 1) + xEndPad);
+        private static int sizey = (int)Math.Round(yEdge * 2 + CUT * n + spaceing * (n - 1));
 
         private static double heightTri = squareDim/2;
         private static double circleArc = 2*Math.PI;
@@ -69,9 +74,13 @@ namespace SSCP.ShellPower
             int greenInc = 255/n;
             int blue = 255;
             int red = 0;
-            for (float x = xEdge; x < m * step; x += step){
+            float xStop = (m * step) + xEdge;
+            float yStop = (n * step) + yEdge + yTopPad;
+            for (float x = xEdge; x < xStop; x += step)
+            {
                 int green = 0;
-                for (float y = yEdge; y < n * step; y += step){
+                for (float y = yEdge + yTopPad; y < yStop; y += step)
+                {
                     Color color = Color.FromArgb(red, green, blue);
                     DrawCell(g, x, y, color);
                     green += greenInc;
