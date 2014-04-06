@@ -63,11 +63,11 @@ namespace SSCP.ShellPower {
             }
         }
 
-        private void InitBuilder(ArraySpec array, double cTemp)
+        private void InitBuilder(ArraySpec array, double cTemp, MPPTSpec mpptSpec, BatterPackSpec packSpec)
         {
             if (builder == null)
             {
-                builder = new ArrayBuilder(array, cTemp);
+                builder = new ArrayBuilder(array, cTemp, mpptSpec, packSpec);
             }
         }
         private void LoadLayoutDefault(string filename){
@@ -234,7 +234,7 @@ namespace SSCP.ShellPower {
 
         private void btnRecalc_Click(object sender, EventArgs e) {
             try {
-                InitBuilder(simInput.Array, simInput.Temperature);
+                InitBuilder(simInput.Array, simInput.Temperature, simInput.MPPT, simInput.BattPackSpec);
                 builder.ClearInsolationData(simInput.Array.Strings);
 
                 InitSimulator();
@@ -247,13 +247,33 @@ namespace SSCP.ShellPower {
 
                 builder.ReturnBestCells(simInput.Array.Strings);
                 arrayLayoutForm = new ArrayLayoutForm(simInput.Array);
-                arrayLayoutForm.ShowDialog();//to check to see what happened.
+                //arrayLayoutForm.ShowDialog();//to check to see what happened.
 
                 //StringSimulator stringSim = new StringSimulator(); //hack
-                double beforePower = StringSimulator.CalcArrayPower(simInput.Array, 1, simInput.Temperature);
-                builder.ClusterIntoStrings(simInput.Array.Strings);
-                double afterPower = StringSimulator.CalcArrayPower(simInput.Array, 1, simInput.Temperature);
-                Debug.WriteLine("Before: {0}W, After: {1}W", beforePower, afterPower);
+                //double beforePower = StringSimulator.CalcArrayPower(simInput.Array, 1, simInput.Temperature);
+                //builder.SetOptimalStrings(simInput.Array.Strings);
+                //double afterPower = StringSimulator.CalcArrayPower(simInput.Array, 1, simInput.Temperature);
+                //Debug.WriteLine("Before: {0}W, After: {1}W", beforePower, afterPower);
+
+                //using (System.IO.StreamWriter file = new System.IO.StreamWriter(@"C:\Users\John\Dropbox\SolarCar\WriteLines3.txt", true))
+                //{
+                //    int nstrings = simInput.Array.Strings.Count;
+                //    string printToLine = "";
+                //    for (int i = 0; i < nstrings; i++)
+                //    {
+                //        var cellStr = simInput.Array.Strings[i];
+                //        printToLine = "New String";
+                //        file.WriteLine(printToLine);
+                //        for (int j = 0; j < cellStr.Cells.Count; j++)
+                //        {
+                //            printToLine = cellStr.Cells[j].Location.ToString() + ": ";
+                //            if (cellStr.Cells[j].isClusterCenter) printToLine = "Cluster Center ->" + printToLine;
+                //            int insolCount = cellStr.Cells[j].Insolation.Count();
+                //            for (int k = 0; k < insolCount; k++) printToLine += Math.Round(cellStr.Cells[j].Insolation[k], 3) + ", ";
+                //            file.WriteLine(printToLine);
+                //        }
+                //    }
+                //}
 
                 double arrayAreaDistortion = Math.Abs(simOutputNoon.ArrayLitArea-simOutput.ArrayArea)/simOutput.ArrayArea;
                 
@@ -417,11 +437,12 @@ namespace SSCP.ShellPower {
                 // debug output
                 csv.WriteLine(time + "," + simOutput.WattsInsolation + "," + simOutput.WattsOutput);
             }
-            InitBuilder(simInput.Array, simInput.Temperature);
+            InitBuilder(simInput.Array, simInput.Temperature, simInput.MPPT, simInput.BattPackSpec);
             builder.ReturnBestCells(simInput.Array.Strings);
-            arrayLayoutForm.ShowDialog();//to check to see what happened.
+            //arrayLayoutForm.ShowDialog();//to check to see what happened.
 
-            builder.ClusterIntoStrings(simInput.Array.Strings);
+            //builder.ClusterIntoStrings(simInput.Array.Strings);
+            //builder.SetOptimalStrings(simInput.Array.Strings);
             csv.Close();
 
             nsim = 0;
@@ -432,20 +453,23 @@ namespace SSCP.ShellPower {
                 totalPowerAfter += StringSimulator.CalcArrayPower(simInput.Array, nsim, simInput.Temperature);
             }
 
-            //using (System.IO.StreamWriter file = new System.IO.StreamWriter(@"C:\Users\John\Dropbox\SolarCar\WriteLines3.txt", true))
+            //using (System.IO.StreamWriter file = new System.IO.StreamWriter(@"C:\Users\John\Dropbox\SolarCar\WriteLines4.txt", true))
             //{
             //    int nstrings = simInput.Array.Strings.Count;
-            //    string printToLine = "";
+            //    string printToLine = "X, Y, ";
+            //    int insolCount = simInput.Array.Strings[0].Cells[0].Insolation.Count();
+            //    for (DateTime time = utcStart; time <= utcEnd; time = time.AddMinutes(stepSize), nsim++) printToLine += time.Hour.ToString()+ ", ";
+            //    file.WriteLine(printToLine);
             //    for (int i = 0; i < nstrings; i++)
             //    {
             //        var cellStr = simInput.Array.Strings[i];
-            //        printToLine = "New String";
-            //        file.WriteLine(printToLine);
+            //        //printToLine = "New String";
+            //        //file.WriteLine(printToLine);
             //        for (int j = 0; j < cellStr.Cells.Count; j++)
             //        {
-            //            printToLine = cellStr.Cells[j].Location.ToString() + ": ";
-            //            if (cellStr.Cells[j].isClusterCenter) printToLine = "Cluster Center ->" + printToLine;
-            //            int insolCount = cellStr.Cells[j].Insolation.Count();
+            //            printToLine = cellStr.Cells[j].Location.X.ToString() + ", " + cellStr.Cells[j].Location.Y.ToString() + ", ";
+            //            //if (cellStr.Cells[j].isClusterCenter) printToLine = "Cluster Center ->" + printToLine;
+            //            insolCount = cellStr.Cells[j].Insolation.Count();
             //            for (int k = 0; k < insolCount; k++) printToLine += Math.Round(cellStr.Cells[j].Insolation[k], 3) + ", ";
             //            file.WriteLine(printToLine);
             //        }

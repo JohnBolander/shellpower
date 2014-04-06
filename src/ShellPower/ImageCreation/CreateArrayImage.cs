@@ -50,6 +50,7 @@ namespace SSCP.ShellPower
                     DrawArray(g);
                 }
                 b.Save(@"../../../../arrays/generic/newfile.png");
+                b.Dispose();
             }
             Debug.WriteLine("percentArc: {0} Cropped Area: {1}, base triange: {2}", percentCirc, croppedArea, baseTri);
             Debug.WriteLine("Cell Area is {0}, allowing {1} cells", areaCell, maxAllowedCells);

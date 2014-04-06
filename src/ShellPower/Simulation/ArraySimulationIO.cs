@@ -59,6 +59,11 @@ namespace SSCP.ShellPower {
         /// Constraints and Efficiency parameters for the MPPTs
         /// </summary>
         public MPPTSpec MPPT { get; set; }
+
+        /// <summary>
+        /// Constraints and Parameters for the Battey Pack
+        /// </summary>
+        public BatterPackSpec BattPackSpec { get; set; }
     }
 
     public class ArraySimulationStepOutput {

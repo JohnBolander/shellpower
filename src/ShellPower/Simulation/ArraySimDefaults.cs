@@ -13,6 +13,7 @@ namespace SSCP.ShellPower
             ArraySimulationStepInput input = new ArraySimulationStepInput();
             input.Array = CreateDefaultArraySpec();
             input.MPPT = CreateDefaultMPPTSpec();
+            input.BattPackSpec = CreateDefaultPackSpec();
             InitTimeAndPlace(input);
             InitializeConditions(input);
             return input;
@@ -46,7 +47,7 @@ namespace SSCP.ShellPower
             cellSpec.VocStc = 0.686;
             cellSpec.DIscDT = -0.0020; // approx, computed
             cellSpec.DVocDT = -0.0018;
-            cellSpec.Area = 0.015555; // m^2
+            cellSpec.Area = 0.015332; // m^2
             cellSpec.NIdeal = 1.26; // fudge
             cellSpec.SeriesR = 0.003; // ohms
 
@@ -79,6 +80,14 @@ namespace SSCP.ShellPower
             mpptSpec.ConstEffOffset = .9948;
             mpptSpec.BoostRatioEffImpact = .0052;
             return mpptSpec;
+        }
+        private static BatterPackSpec CreateDefaultPackSpec()
+        {
+            BatterPackSpec packSpec = new BatterPackSpec();
+            packSpec.Vmax = 112;
+            packSpec.Vmin = 75;
+            packSpec.Vnom = 90;
+            return packSpec;
         }
     }
 }

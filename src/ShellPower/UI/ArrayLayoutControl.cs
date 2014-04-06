@@ -84,27 +84,27 @@ namespace SSCP.ShellPower {
             DateTime start = DateTime.Now;
 
             RecomputeArrayViewModel(); // compute junction points, downsampled array image, etc
-            Debug.WriteLine("compute: " + (DateTime.Now - start).TotalMilliseconds);
+            //Debug.WriteLine("compute: " + (DateTime.Now - start).TotalMilliseconds);
 
             DrawBackground(g);
-            Debug.WriteLine("clear: " + (DateTime.Now - start).TotalMilliseconds);
+            //Debug.WriteLine("clear: " + (DateTime.Now - start).TotalMilliseconds);
 
             if (texSmall != null) {
                 g.DrawImage(texSmall, new Point(0, 0));
-                Debug.WriteLine("layout: " + (DateTime.Now - start).TotalMilliseconds);
+                //Debug.WriteLine("layout: " + (DateTime.Now - start).TotalMilliseconds);
             }
 
             if (CellString != null) {
                 RecomputeTexSelected();
                 DrawSelectedString(g);
-                Debug.WriteLine("highlight: " + (DateTime.Now - start).TotalMilliseconds);
+                //Debug.WriteLine("highlight: " + (DateTime.Now - start).TotalMilliseconds);
             }
 
             if (mouseoverJunction >= 0 && mouseoverJunction < junctionPoints.Length) {
                 DrawJunction(g, junctionPoints[mouseoverJunction], Brushes.White);
-                Debug.WriteLine("mouse: " + (DateTime.Now - start).TotalMilliseconds);
+                //Debug.WriteLine("mouse: " + (DateTime.Now - start).TotalMilliseconds);
             }
-            Debug.WriteLine("done: " + (DateTime.Now - start).TotalMilliseconds);
+            //Debug.WriteLine("done: " + (DateTime.Now - start).TotalMilliseconds);
         }
 
         protected override void OnMouseDown(MouseEventArgs e) {

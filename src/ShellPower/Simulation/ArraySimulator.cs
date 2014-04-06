@@ -419,6 +419,8 @@ void main()
             double[] wattsIn = new double[ncells];
             double[] areas = new double[ncells];
             double wattsInUnlinked = 0, areaUnlinked = 0;
+            double[] maxCurve = new double[ncells];
+            double[] areaNums = new double[ncells];
             for (int i = 0; i < computeWidth * computeHeight; i++)
             {
                 Color color = texColors[i];
@@ -428,6 +430,8 @@ void main()
                     int id = colorToId[color];
                     wattsIn[id] += texWattsIn[i];
                     areas[id] += texArea[i];
+                    areaNums[id] += 1;
+                    maxCurve[id] = Math.Max(maxCurve[id], texArea[i]);
                 }
                 else
                 {
@@ -445,15 +449,22 @@ void main()
 
             //compute by cell watts and find totals
             double totalArea = 0, totalWattsIn = 0;
+            double pixelSizeThreshhold = 0.00002;
+            double pixelRatioThreshhold = 1.5;
             foreach (ArraySpec.Cell cell in cells)
             {
                 int id = colorToId[cell.Color];
                 wattsIn[id] += array.CellSpec.Area * wPerM2Iindirect;
                 wattsIn[id] *= (1.0 - encapLoss);
+                //if (areas[id] > array.CellSpec.Area * 1.1) cell.Insolation.Add(.1);
+                //else cell.Insolation.Add(wattsIn[id]); //populates the insolation vector of cells
+                //maxCurve[id] > pixelSizeThreshhold ||
+                if (maxCurve[id]/(areas[id]/areaNums[id]) > pixelRatioThreshhold) cell.isClusterCenter = true;
                 cell.Insolation.Add(wattsIn[id]); //populates the insolation vector of cells
                 totalWattsIn += wattsIn[id];
                 totalArea += areas[id];
                 Debug.WriteLine("cell {0}: {1}W, {2}m^2", id, wattsIn[id], areas[id]);
+                Debug.WriteLine("Max pixel size is: {0}", maxCurve[id]);
             }
 
             //split here
@@ -634,6 +645,16 @@ void main()
             DebugSaveBuffer(FramebufferAttachment.ColorAttachment0, "../../../../test0.png");
             DebugSaveBuffer(FramebufferAttachment.ColorAttachment1, "../../../../test1.png");
             DebugSaveBuffer(FramebufferAttachment.ColorAttachment2, "../../../../test2.png");
+            //DebugSaveBuffer(FramebufferAttachment.ColorAttachment3, "../../../../test3.png");
+            //DebugSaveBuffer(FramebufferAttachment.ColorAttachment4, "../../../../test4.png");
+            //DebugSaveBuffer(FramebufferAttachment.ColorAttachment5, "../../../../test5.png");
+            //DebugSaveBuffer(FramebufferAttachment.ColorAttachment6, "../../../../test6.png");
+            //DebugSaveBuffer(FramebufferAttachment.ColorAttachment7, "../../../../test7.png");
+            //DebugSaveBuffer(FramebufferAttachment.ColorAttachment8, "../../../../test8.png");
+            //DebugSaveBuffer(FramebufferAttachment.ColorAttachment9, "../../../../test9.png");
+            //DebugSaveBuffer(FramebufferAttachment.ColorAttachment10, "../../../../test10.png");
+            //DebugSaveBuffer(FramebufferAttachment.DepthAttachment, "../../../../test11.png");
+            //DebugSaveBuffer(FramebufferAttachment.ColorAttachment3, "../../../../test12.png");
         }
         private void DebugSaveBuffer(FramebufferAttachment buf, String fname) {
             Bitmap bmp = ReadBuffer(buf);
